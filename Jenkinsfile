@@ -1,58 +1,44 @@
-pipeline {
+@Library("Shared") _
+pipeline{
     agent { label "vinod" }
-
-    stages {
-
-        stage("Cleanup") {
-            steps {
-                echo "Cleaning old Docker resources"
-                sh "docker system prune -af || true"
+    stages{
+        stage("Hello"){
+            steps{
+                script{
+                    hello()
+                }
             }
         }
-
-        stage("Code") {
-            steps {
-                echo "Cloning code"
-                git url: "https://github.com/LondheShubham153/django-notes-app", branch: "main"
+        stage("code"){
+            steps{
+                script{
+                    clone("https://github.com/Divyjain0212/django-notes-app.git","main")
+                }
             }
         }
-
-        stage("Build") {
-            steps {
-                echo "Building Docker image"
-                sh "docker build -t notes-app:latest ."
+        stage("Build"){
+            steps{
+                script{
+                    docker_build("notes-app","latest","divyj0212")
+                }
             }
         }
-
-        stage("Test") {
-            steps {
-                echo "Running Trivy scan"
-                sh """
-                trivy image --scanners vuln --exit-code 1 notes-app || echo "Vulnerabilities found"
-                """
+        stage("Test"){
+            steps{
+                echo "This is testing the code."
             }
         }
-        
-        stage("Push") {
-            steps {
-                echo "This is pushing the image to Docker Hub"
-                withCredentials([usernamePassword(
-                    "credentialsId":"dockerHubCred",
-                    passwordVariable:"dockerHubPass",
-                    usernameVariable:"dockerHubUser")]){
-                        sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                        sh "docker image tag notes-app:latest ${env.dockerHubUser}/notes-app:latest"
-                        sh "docker push ${env.dockerHubUser}/notes-app:latest"
-                    }
+        stage("Push to docker hub"){
+            steps{
+                script{
+                    docker_push("notes-app","latest","divyj0212")
+                }
             }
         }
-
-        stage("Deploy") {
-            steps {
-                echo "Deploying using docker-compose"
-
-                sh "docker-compose down || true"
-                sh "docker-compose up -d --build"
+        stage("Deploy"){
+            steps{
+                echo "This is deploying the code."
+                sh "docker compose up -d"
             }
         }
     }
