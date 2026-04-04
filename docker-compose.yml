@@ -2,6 +2,6 @@ version: "3.8"
 
 services:
   web:
-    image: "divyj0212/notes-app:latest"
+    image: "notes-app:latest"
     ports:
       - "8000:8000"
